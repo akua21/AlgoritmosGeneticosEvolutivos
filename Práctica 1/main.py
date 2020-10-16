@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 WEBSITE = "http://memento.evannai.inf.uc3m.es/age/test?c="
 NUM_SENSORS = 4 * 16 # tamaño cromosoma, 4 estaciones con 16 sensores cada una
 
-SIZE_POPULATION = 50 # tamaño población, número de individuos de una población
-CYCLES = 10 # número de ciclos(generaciones)
+SIZE_POPULATION = 100 # tamaño población, número de individuos de una población
+CYCLES = 15 # número de ciclos(generaciones)
 
 
 
@@ -40,7 +40,7 @@ def initPopulation(size_popu, num_sensors):
 def evaluatePopulation(population):
     evaluations = []
     for chromosome in population:
-        evaluation = getRequest(''.join(map(str, chromosome)))  # ?
+        evaluation = getRequest(''.join(map(str, chromosome)))
         evaluations.append(evaluation)
 
     # print(evaluations)
@@ -58,14 +58,17 @@ def tournamentSelection(population, population_evaluation, p_tournament=0.05, el
 
     # Si se quiere elitismo entonces nos guardamos los mejores individuos(size_elite) antes del torneo
     if elitism:
-        sorted_population_eval = sorted(population_evaluation) # sorted no modifica population_evaluation # ?
+
+        size_popu = size_popu - size_elite
+
+        sorted_population_eval = sorted(population_evaluation)
 
         for i in range(size_elite):
             selected_population.append(population[popu_evaluation.index(sorted_population_eval[i])])
 
 
     # print("selected_population antes del torneo: ", selected_population)
-    for i in range(size_popu - size_elite):
+    for i in range(size_popu):
         aux_eval = math.inf
 
         index_selected_individuals = random.sample(range(size_popu), tournament_size)
@@ -109,7 +112,8 @@ def crossingSimple(parent_1, parent_2):
     child_1 = []
     child_2 = []
 
-    divide_number = random.randint(0, len(parent_1)) # este numero va a ser distinto cada vez que llame a crossingSimple, no sé si tiene que ser así o no ¿?
+    divide_number = random.randint(1, len(parent_1 - 2))
+
     for i in range(len(parent_1)):
         if i < divide_number:
             child_1.append(parent_1[i])
@@ -126,19 +130,22 @@ def crossing2Points(parent_1, parent_2):
     child_1 = []
     child_2 = []
 
-    divide_number_1 = random.randint(0, len(parent_1)) # este numero va a ser distinto cada vez que llame a crossingSimple, no sé si tiene que ser así o no ¿?
-    divide_number_2 = random.randint(0, len(parent_1))
+    divide_number_1 = random.randint(1, len(parent_1 - 2))
+    divide_number_2 = random.randint(1, len(parent_1 - 2))
+
+    divide_number_min = min(divide_number_1, divide_number_2)
+    divide_number_max = max(divide_number_1, divide_number_2)
 
     for i in range(len(parent_1)):
-        if i < divide_number_1:
+        if i < divide_number_min:
             child_1.append(parent_1[i])
             child_2.append(parent_2[i])
 
-        elif i >= divide_number_1 and i < divide_number_2:
+        elif i >= divide_number_min and i < divide_number_max:
             child_1.append(parent_2[i])
             child_2.append(parent_1[i])
 
-        elif i >= divide_number_2:
+        elif i >= divide_number_max:
             child_1.append(parent_1[i])
             child_2.append(parent_2[i])
 
@@ -155,25 +162,23 @@ def crossing(population, uniform=False, simple=False, two_points=False):
         if uniform:
             child_1, child_2 = crossingUniform(parent_1, parent_2)
 
-            childs.append(child_1)
-            childs.append(child_2)
+            childs.extend([child_1, child_2])
 
         elif simple:
             child_1, child_2 = crossingSimple(parent_1, parent_2)
 
-            childs.append(child_1)
-            childs.append(child_2)
+            childs.extend([child_1, child_2])
 
         elif two_points:
             child_1, child_2 = crossing2Points(parent_1, parent_2)
 
-            childs.append(child_1)
-            childs.append(child_2)
+            childs.extend([child_1, child_2])
 
     return childs
 
 
 # Operador de mutación
+# Mutación de todos con poca probabilidad (1/NUM_SENSORS) para cada gen
 def mutation(population):
     probability = 1/NUM_SENSORS
     mutated_population = []
@@ -185,6 +190,32 @@ def mutation(population):
                 mutated_population[i].append(1 - population[i][j])
             else:
                 mutated_population[i].append(population[i][j])
+
+    return mutated_population
+
+
+# Mutación de los peores con mayor probabilidad (1/NUM_SENSORS)*2 , los mejores (20%) no mutan
+def mutation_worst_ones(population, population_evaluation):
+    probability = (1/NUM_SENSORS)*2
+    mutated_population = []
+    size_popu = len(population)
+
+    # Añado a los mejores a la nueva población y los elimino de la actual para que luego no entren en la mutación
+    sorted_population_eval = sorted(population_evaluation)
+    size_best = int(len(population) * 0.2)
+
+    last_best_one_eval = sorted_population_eval[size_best - 1]
+
+    for i in range(size_popu):
+        if popu_evaluation[i] > last_best_one_eval:
+            mutated_population.append([])
+            for j in range(len(population[i])):
+                if random.random() <= probability:
+                    mutated_population[i].append(1 - population[i][j])
+                else:
+                    mutated_population[i].append(population[i][j])
+        else:
+            mutated_population.append(population[i])
 
     return mutated_population
 
@@ -215,12 +246,12 @@ for i in range(CYCLES):
 
 
     # SELECCIÓN POR TORNEO
-    selected_popu = tournamentSelection(popu, popu_evaluation)
+    # selected_popu = tournamentSelection(popu, popu_evaluation)
     # print("Selected population from TOURNAMENT: ", selected_popu)
     # print("Evaluation selected population: ", evaluatePopulation(selected_popu))
 
     # SELECCIÓN POR TORNEO CON ELITISMO
-    # selected_popu = tournamentSelection(popu, popu_evaluation, elitism=True, size_elite=3)
+    selected_popu = tournamentSelection(popu, popu_evaluation, elitism=True, size_elite=10)
 
 
     # CRUZAMIENTO POR CRUCE UNIFORME
@@ -228,14 +259,17 @@ for i in range(CYCLES):
     # print("Childs of selected population: ", childs)
 
     # CRUZAMIENTO POR CRUCE SIMPLE
-    childs = crossing(selected_popu, simple=True)
+    # childs = crossing(selected_popu, simple=True)
 
     # CRUZAMIENTO POR CRUCE DOS PUNTOS
-    childs = crossing(selected_popu, two_points=True)
+    # childs = crossing(selected_popu, two_points=True)
 
 
     # MUTACIÓN
-    mutated_popu = mutation(childs)
+    # mutated_popu = mutation(childs)
+    childs_evaluation = evaluatePopulation(childs)
+    mutated_popu = mutation_worst_ones(childs, childs_evaluation)
+
     # print("Childs mutated: ", mutated_popu)
 
     # for i in range(len(childs)):
