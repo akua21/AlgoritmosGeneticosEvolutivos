@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 
 # Constantes
 WEBSITE = "http://memento.evannai.inf.uc3m.es/age/test?c="
-WEBSITE_24 = "http://memento.evannai.inf.uc3m.es/age/alfa?c="
-NUM_SENSORS = 4 * 16 # tamaño cromosoma, 4 estaciones con 16 sensores cada una
+WEBSITE_24 = "http://163.117.164.219/age/alfa?c="
+WEBSITE_MADRIZ = "http://163.117.164.219/age/madriz?c="
+NUM_SENSORS = 24 * 16 # tamaño cromosoma, 4 estaciones con 16 sensores cada una
 
 SIZE_POPULATION = 100 # tamaño población, número de individuos de una población
 CYCLES = 5 # número máximo de ciclos(generaciones) sin mejora que permitimos
-NUM_TIMES_EXPERIMENT = 8 # número de veces que se va a ejecutar el experimento
+NUM_TIMES_EXPERIMENT = 1 # número de veces que se va a ejecutar el experimento
 
 
 
@@ -24,7 +25,7 @@ NUM_TIMES_EXPERIMENT = 8 # número de veces que se va a ejecutar el experimento
 # Petición al servidor
 def getRequest(chromosome):
     # Valor de evaluación
-    request = float(requests.get(WEBSITE + chromosome).text)
+    request = float(requests.get(WEBSITE_MADRIZ + chromosome).text)
 
     return request
 
@@ -423,13 +424,13 @@ print("Mejor individuo del experimento: ", best_of_generation[best_of_generation
 
 # plt.plot(list_best_of_generation_eval[0], list_best_of_generation_eval[1])
 plt.plot(list_best_of_generation_eval[0], label='Ex. 1º vez')
-plt.plot(list_best_of_generation_eval[1], label='Ex. 2º vez')
-plt.plot(list_best_of_generation_eval[2], label='Ex. 3º vez')
-plt.plot(list_best_of_generation_eval[3], label='Ex. 4º vez')
-plt.plot(list_best_of_generation_eval[4], label='Ex. 5º vez')
-plt.plot(list_best_of_generation_eval[5], label='Ex. 6º vez')
-plt.plot(list_best_of_generation_eval[6], label='Ex. 7º vez')
-plt.plot(list_best_of_generation_eval[7], label='Ex. 8º vez')
+# plt.plot(list_best_of_generation_eval[1], label='Ex. 2º vez')
+# plt.plot(list_best_of_generation_eval[2], label='Ex. 3º vez')
+# plt.plot(list_best_of_generation_eval[3], label='Ex. 4º vez')
+# plt.plot(list_best_of_generation_eval[4], label='Ex. 5º vez')
+# plt.plot(list_best_of_generation_eval[5], label='Ex. 6º vez')
+# plt.plot(list_best_of_generation_eval[6], label='Ex. 7º vez')
+# plt.plot(list_best_of_generation_eval[7], label='Ex. 8º vez')
 
 plt.xlabel('Generaciones')
 plt.ylabel('Valor de fitness')
