@@ -16,6 +16,7 @@ WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
 NUM_MOTORS = 4
+SIZE_POPULATION = 2
 
 S = 10
 
@@ -32,23 +33,34 @@ def getRequest(rotations):
     return request
 
 # Inicializar población
-def initIndividual(num_motors):
-    # Vector codificación
-    x = []
-    # Vector varianzas
-    variances = []
+def initPopulation(size_population, num_motors):
+    population = []
 
-    for i in range(num_motors):
-        x.append(np.random.uniform(-180, 180))
-        variances.append(np.random.uniform(200, 400))
+    for individual in range(size_population):
+        # Vector codificación
+        x = []
+        # Vector varianzas
+        variances = []
+        for i in range(num_motors):
+            x.append(np.random.uniform(-180, 180))
+            variances.append(np.random.uniform(200, 400))
 
-    individual = [x, variances]
-    return individual
+        population.append([x, variances, None])
+    return population
 
-# Evaluar individuo
-def evaluateIndividual(individual):
-    evaluation = getRequest(individual[0])
-    return evaluation
+# Evaluar población
+def evaluatePopulation(population):
+    for individual in population:
+        individual[2] = getRequest(individual[0])
+
+# Ordenar población por menor evaluación(fitness)
+def auxFunctionSort(individual):
+    return individual[2]
+
+def sortPopulation(population):
+    population.sort(key=auxFunctionSort)
+
+
 
 # MUTACIÓN
 def mutation(individual, evaluation_individual, success_in_generation):
@@ -112,22 +124,34 @@ def mutation_variances(individual, success_in_generation):
 
 # EJECUCIÓN---------------------------------------------------------------------
 
-indi = initIndividual(NUM_MOTORS)
-print("INDIVIDUO: ", indi)
+popu = initPopulation(SIZE_POPULATION, NUM_MOTORS)
+print("POBLACIÓN INICIAL: ", popu)
 print()
 
-evaluation_indi = evaluateIndividual(indi)
-print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
+evaluatePopulation(popu)
+print("POBLACIÓN EVALUADA: ", popu)
 print()
 
-# Bucle (converge en un número de ciclos)
-success_in_generation = []
-for i in range(500):
-    print("Generación ", i)
+sortPopulation(popu)
+print("POBLACIÓN ORDENADA: ", popu)
+print()
 
-    evaluation_indi = evaluateIndividual(indi)
-
-    indi = mutation(indi, evaluation_indi, success_in_generation)
-
-print("EVALUACIÓN FINAL: ", evaluation_indi)
-print("CODIFICACIÓN FINAL: ", indi[0])
+# indi = initIndividual(NUM_MOTORS)
+# print("INDIVIDUO: ", indi)
+# print()
+#
+# evaluation_indi = evaluateIndividual(indi)
+# print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
+# print()
+#
+# # Bucle (converge en un número de ciclos)
+# success_in_generation = []
+# for i in range(500):
+#     print("Generación ", i)
+#
+#     evaluation_indi = evaluateIndividual(indi)
+#
+#     indi = mutation(indi, evaluation_indi, success_in_generation)
+#
+# print("EVALUACIÓN FINAL: ", evaluation_indi)
+# print("CODIFICACIÓN FINAL: ", indi[0])
