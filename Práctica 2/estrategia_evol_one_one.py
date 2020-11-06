@@ -17,6 +17,8 @@ WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6
 
 NUM_MOTORS = 4
 
+S = 10
+
 # Funciones
 
 # Petición al servidor
@@ -38,7 +40,6 @@ def initIndividual(num_motors):
 
     for i in range(num_motors):
         x.append(np.random.uniform(-180, 180))
-        # variances.append(np.random.uniform(100, 500))
         variances.append(np.random.uniform(50, 100))
 
     individual = [x, variances]
@@ -55,14 +56,27 @@ def mutation(individual, evaluation_individual, success_in_generation):
     evaluation_mutated = evaluateIndividual(individual_mutated)
 
     if evaluation_individual <= evaluation_mutated:
-        individual_selected = [individual[0], mutation_variances(individual, success_in_generation)]
-        success_in_generation.pop(0)
         success_in_generation.append(0)
+
+        if len(success_in_generation) > S:
+            success_in_generation.pop(0)
+            individual_selected = [individual[0], mutation_variances(individual, success_in_generation)]
+        else:
+            individual_selected = individual
+
     else:
-        individual_selected = [individual_mutated[0], mutation_variances(individual_mutated, success_in_generation)]
-        success_in_generation.pop(0)
         success_in_generation.append(1)
-    return individual_selected, success_in_generation
+
+        if len(success_in_generation) > S:
+            success_in_generation.pop(0)
+            individual_selected = [individual_mutated[0], mutation_variances(individual_mutated, success_in_generation)]
+        else:
+            individual_selected = individual_mutated
+
+        print("Nuevo mejor valor:", evaluation_mutated)
+        print("Codificación nuevo valor:", individual_selected[0])
+
+    return individual_selected
 
 
 # Mutación de la parte funcional
@@ -107,24 +121,13 @@ print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
 print()
 
 # Bucle (converge en un número de ciclos)
-num_generations = 10
 success_in_generation = []
 for i in range(500):
     print("Generación ", i)
 
-    if i < num_generations:
-        evaluation_indi = evaluateIndividual(indi)
+    evaluation_indi = evaluateIndividual(indi)
 
-        individual_mutated = [mutation_x(indi), indi[1]]
-        evaluation_mutated = evaluateIndividual(individual_mutated)
+    indi = mutation(indi, evaluation_indi, success_in_generation)
 
-        if evaluation_indi <= evaluation_mutated:
-            indi = indi
-            success_in_generation.append(0)
-        else:
-            indi = individual_mutated
-            success_in_generation.append(1)
-    else:
-        indi, success_in_generation = mutation(indi, evaluation_indi, success_in_generation)
-
-print("EVALUACION FINAL: ", evaluation_indi)
+print("EVALUACIÓN FINAL: ", evaluation_indi)
+print("CODIFICACIÓN FINAL: ", indi[0])
