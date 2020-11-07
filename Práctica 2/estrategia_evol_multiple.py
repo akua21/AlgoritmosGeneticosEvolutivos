@@ -17,6 +17,7 @@ WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6
 
 NUM_MOTORS = 4
 SIZE_POPULATION = 2
+NUM_CHILDS = 1
 
 S = 10
 
@@ -60,36 +61,56 @@ def auxFunctionSort(individual):
 def sortPopulation(population):
     population.sort(key=auxFunctionSort)
 
+# Reemplazo por Inserción - descendientes siempre pasan a la siguiente generación y sustituyen a los progenitores menos aptos
 
 
-# MUTACIÓN
-def mutation(individual, evaluation_individual, success_in_generation):
-    individual_mutated = [mutation_x(individual), individual[1]]
-    evaluation_mutated = evaluateIndividual(individual_mutated)
+# Seleccionar dos individuos (padres) por torneo
+def tournamentSelection(population, p_tournament=0.05, sorted_population=False):
+    size_popu = len(population)
+    tournament_size = max(math.floor(p_tournament * size_popu), 2)
+    parents = []
 
-    if evaluation_individual < evaluation_mutated:
-        success_in_generation.append(0)
+    for i in range(2):
+        index_selected_individuals = random.sample(range(size_popu), tournament_size)
 
-        if len(success_in_generation) > S:
-            success_in_generation.pop(0)
-            individual_selected = [individual[0], mutation_variances(individual, success_in_generation)]
+        # Cuando se va a realizar el reemplazo por inserción la población ya está ordenada por su evaluación
+        if sorted_population:
+            parents.append(population[min(index_selected_individuals)])
+
+        # Cuando se va a realizar el reemplazo por inclusión la población no está ordenada por su evaluación
         else:
-            individual_selected = individual
+            index_winner = 0
+            aux_eval = math.inf
 
-    else:
-        success_in_generation.append(1)
+            for index in index_selected_individuals:
+                if aux_eval > population[index][2]:
+                    index_winner = index
+                    aux_eval = population[index_winner][2]
 
-        if len(success_in_generation) > S:
-            success_in_generation.pop(0)
-            individual_selected = [individual_mutated[0], mutation_variances(individual_mutated, success_in_generation)]
-        else:
-            individual_selected = individual_mutated
+            parents.append(population[index_winner])
 
-        print("Nuevo mejor valor:", evaluation_mutated)
-        print("Codificación nuevo valor:", individual_selected[0])
+    return parents
 
-    return individual_selected
+# Cruzamiento
+def crossing(parents):
+    parent1 = parents[0]
+    parent2 = parents[1]
 
+    # Vector de codificación
+    x_vector_child = []
+    # Vector de varianzas
+    variances_vector_child = []
+    for i in range(len(parent1[0])):
+        x_vector_child.append((parent1[0][i] + parent2[0][i])/2)
+        variances_vector_child.append(math.sqrt(parent1[1][i] + parent2[1][i]))
+
+    child = [x_vector_child, variances_vector_child, None]
+    return child
+
+# Mutación
+def mutation(individual):
+    individual_mutated = [mutation_x(individual), mutation_variances(individual), None]
+    return individual_mutated
 
 # Mutación de la parte funcional
 def mutation_x(individual):
@@ -104,22 +125,32 @@ def mutation_x(individual):
     return x_mutated
 
 # Mutación de las varianzas
-def mutation_variances(individual, success_in_generation):
-    proportion_success = sum(success_in_generation) / len(success_in_generation)
-    cd = 0.82
-    ci = 1.18
+def mutation_variances(individual):
+    variances_vector = individual[1]
     variances_mutated = []
 
-    for variance in individual[1]:
-        if proportion_success < 1/5:
-            variances_mutated.append(cd * variance)
-        elif proportion_success > 1/5:
-            variances_mutated.append(ci * variance)
-        elif proportion_success == 1/5:
-            variances_mutated.append(variance)
-
+    tau = 1/math.sqrt(len(variances_vector))
+    for variance in variances_vector:
+        gauss_value = random.gauss(0, tau)
+        variances_mutated.append(math.exp(gauss_value * variance))
     return variances_mutated
 
+# Generación de los hijos
+def generateChildren(population, num_childs):
+    children = []
+    for i in range(num_childs):
+        parents = tournamentSelection(population, sorted_population=True)
+        print("Parents", parents)
+        print()
+        child = crossing(parents)
+        print("Child", child)
+        print()
+        child_mutated = mutation(child)
+        print("Child mutated", child_mutated)
+        print()
+
+        children.append(child_mutated)
+    return children
 
 
 # EJECUCIÓN---------------------------------------------------------------------
@@ -136,22 +167,6 @@ sortPopulation(popu)
 print("POBLACIÓN ORDENADA: ", popu)
 print()
 
-# indi = initIndividual(NUM_MOTORS)
-# print("INDIVIDUO: ", indi)
-# print()
-#
-# evaluation_indi = evaluateIndividual(indi)
-# print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
-# print()
-#
-# # Bucle (converge en un número de ciclos)
-# success_in_generation = []
-# for i in range(500):
-#     print("Generación ", i)
-#
-#     evaluation_indi = evaluateIndividual(indi)
-#
-#     indi = mutation(indi, evaluation_indi, success_in_generation)
-#
-# print("EVALUACIÓN FINAL: ", evaluation_indi)
-# print("CODIFICACIÓN FINAL: ", indi[0])
+children = generateChildren(popu, NUM_CHILDS)
+print("HIJOS: ", children)
+print()
