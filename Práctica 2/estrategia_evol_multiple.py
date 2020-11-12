@@ -16,10 +16,12 @@ WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
 NUM_MOTORS = 4
-SIZE_POPULATION = 2
+SIZE_POPULATION = 6
 NUM_CHILDS = 1
 
 S = 10
+TAU = 1/math.sqrt(2 * math.sqr(NUM_MOTORS))
+TAU_0 = 1/math.sqrt(2 * NUM_MOTORS)
 
 # Funciones
 
@@ -61,16 +63,14 @@ def auxFunctionSort(individual):
 def sortPopulation(population):
     population.sort(key=auxFunctionSort)
 
-# Reemplazo por Inserción - descendientes siempre pasan a la siguiente generación y sustituyen a los progenitores menos aptos
 
-
-# Seleccionar dos individuos (padres) por torneo
-def tournamentSelection(population, p_tournament=0.05, sorted_population=False):
+# Seleccionar los padres por torneo
+def tournamentSelection(population, p_tournament=0.05, sorted_population=False, num_parents=2):
     size_popu = len(population)
     tournament_size = max(math.floor(p_tournament * size_popu), 2)
     parents = []
 
-    for i in range(2):
+    for i in range(num_parents):
         index_selected_individuals = random.sample(range(size_popu), tournament_size)
 
         # Cuando se va a realizar el reemplazo por inserción la población ya está ordenada por su evaluación
@@ -93,16 +93,16 @@ def tournamentSelection(population, p_tournament=0.05, sorted_population=False):
 
 # Cruzamiento
 def crossing(parents):
-    parent1 = parents[0]
-    parent2 = parents[1]
-
     # Vector de codificación
     x_vector_child = []
     # Vector de varianzas
     variances_vector_child = []
-    for i in range(len(parent1[0])):
-        x_vector_child.append((parent1[0][i] + parent2[0][i])/2)
-        variances_vector_child.append(math.sqrt(parent1[1][i] + parent2[1][i]))
+    for i in range(len(parents[0][0])):
+        x_vector_child.append((sum(parent[0][i] for parent in parents))/len(parents[0][0]))
+        variances_vector_child.append(random.choice([parent[1][i] for parent in parents]))
+
+        print("x_vector_child: ", x_vector_child)
+        print("v_vector_child: ", variances_vector_child)
 
     child = [x_vector_child, variances_vector_child, None]
     return child
@@ -125,21 +125,26 @@ def mutation_x(individual):
     return x_mutated
 
 # Mutación de las varianzas
-def mutation_variances(individual):
+def mutation_variances(individual, scale=False):
     variances_vector = individual[1]
     variances_mutated = []
 
-    tau = 1/math.sqrt(len(variances_vector))
     for variance in variances_vector:
-        gauss_value = random.gauss(0, tau)
-        variances_mutated.append(math.exp(gauss_value * variance))
+        gauss_value = random.gauss(0, TAU)
+
+        if scale:
+            gauss_value_scale = random.gauss(0, TAU_0)
+            variances_mutated.append(math.exp(gauss_value_scale) * variance * math.exp(gauss_value))
+        else:
+            variances_mutated.append(variance * math.exp(gauss_value))
+
     return variances_mutated
 
 # Generación de los hijos
 def generateChildren(population, num_childs):
     children = []
     for i in range(num_childs):
-        parents = tournamentSelection(population, sorted_population=True)
+        parents = tournamentSelection(population, sorted_population=True, num_parents=3)
         print("Parents", parents)
         print()
         child = crossing(parents)
@@ -151,6 +156,30 @@ def generateChildren(population, num_childs):
 
         children.append(child_mutated)
     return children
+
+# Nueva población - Reemplazo por Inserción o Inclusión
+def newPopulation(population, children, replace="insertion"):
+    new_population = []
+
+    if replace == "insertion":
+        if len(population) <= len(children):
+            evaluatePopulation(children)
+            sortPopulation(children)
+            new_population = children[:len(population)]
+        else:
+            new_population = population[:-len(children)] + children
+            evaluatePopulation(new_population)
+            sortPopulation(new_population)
+
+    elif replace == "inclusion":
+        evaluatePopulation(children)
+
+        new_population = population + children
+        sortPopulation(new_population)
+
+        new_population = new_population[:len(children)]
+
+    return new_population
 
 
 # EJECUCIÓN---------------------------------------------------------------------
@@ -169,4 +198,8 @@ print()
 
 children = generateChildren(popu, NUM_CHILDS)
 print("HIJOS: ", children)
+print()
+
+new_popu = newPopulation(popu, children)
+print("NUEVA POBLACIÓN: ", children)
 print()
