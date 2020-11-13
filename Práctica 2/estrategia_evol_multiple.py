@@ -16,11 +16,11 @@ WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
 NUM_MOTORS = 4
-SIZE_POPULATION = 6
-NUM_CHILDS = 1
+SIZE_POPULATION = 4
+NUM_CHILDS = 6
 
 S = 10
-TAU = 1/math.sqrt(2 * math.sqr(NUM_MOTORS))
+TAU = 1/math.sqrt(2 * math.sqrt(NUM_MOTORS))
 TAU_0 = 1/math.sqrt(2 * NUM_MOTORS)
 
 # Funciones
@@ -101,9 +101,6 @@ def crossing(parents):
         x_vector_child.append((sum(parent[0][i] for parent in parents))/len(parents[0][0]))
         variances_vector_child.append(random.choice([parent[1][i] for parent in parents]))
 
-        print("x_vector_child: ", x_vector_child)
-        print("v_vector_child: ", variances_vector_child)
-
     child = [x_vector_child, variances_vector_child, None]
     return child
 
@@ -144,15 +141,11 @@ def mutation_variances(individual, scale=False):
 def generateChildren(population, num_childs):
     children = []
     for i in range(num_childs):
-        parents = tournamentSelection(population, sorted_population=True, num_parents=3)
-        print("Parents", parents)
-        print()
+        parents = tournamentSelection(population, sorted_population=True)
+
         child = crossing(parents)
-        print("Child", child)
-        print()
+
         child_mutated = mutation(child)
-        print("Child mutated", child_mutated)
-        print()
 
         children.append(child_mutated)
     return children
@@ -177,7 +170,7 @@ def newPopulation(population, children, replace="insertion"):
         new_population = population + children
         sortPopulation(new_population)
 
-        new_population = new_population[:len(children)]
+        new_population = new_population[:-len(children)]
 
     return new_population
 
@@ -196,10 +189,18 @@ sortPopulation(popu)
 print("POBLACIÓN ORDENADA: ", popu)
 print()
 
-children = generateChildren(popu, NUM_CHILDS)
-print("HIJOS: ", children)
-print()
+best_individual = popu[0]
 
-new_popu = newPopulation(popu, children)
-print("NUEVA POBLACIÓN: ", children)
-print()
+# Bucle (converge en un número de ciclos)
+for i in range(500):
+    print("Generación ", i)
+
+    children = generateChildren(popu, NUM_CHILDS)
+
+    popu = newPopulation(popu, children)
+
+    if best_individual[2] > popu[0][2]:
+        best_individual = popu[0]
+
+        print("Evaluación nuevo mejor individuo: ", best_individual[2])
+        print("Codificación nuevo mejor individuo: ", best_individual[0])
