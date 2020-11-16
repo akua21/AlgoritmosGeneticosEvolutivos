@@ -67,6 +67,7 @@ def mutation(individual, evaluation_individual, success_in_generation):
             individual_selected = [individual[0], mutation_variances(individual, success_in_generation)]
         else:
             individual_selected = individual
+        individual_selected_eval = evaluation_individual
 
     else:
         success_in_generation.append(1)
@@ -76,11 +77,12 @@ def mutation(individual, evaluation_individual, success_in_generation):
             individual_selected = [individual_mutated[0], mutation_variances(individual_mutated, success_in_generation)]
         else:
             individual_selected = individual_mutated
+        individual_selected_eval = evaluation_mutated
 
         print("Nuevo mejor valor:", evaluation_mutated)
         print("Codificación nuevo valor:", individual_selected[0])
 
-    return individual_selected
+    return individual_selected, individual_selected_eval
 
 
 # Mutación de la parte funcional
@@ -118,9 +120,12 @@ def mutation_variances(individual, success_in_generation):
 
 # BUCLE para realizar varias veces el EXPERIMENTO-------------------------------
 list_best_individual_eval_exp = []
+
+best_of_all = [0, math.inf, 0]
+
 for num in range(NUM_TIMES_EXPERIMENT):
     print("EXP ", num, "-------------------------")
-    list_best_individual_eval = []
+    COUNTER_EVALS = 0
 
     indi = initIndividual(NUM_MOTORS)
     print("INDIVIDUO: ", indi)
@@ -130,34 +135,44 @@ for num in range(NUM_TIMES_EXPERIMENT):
     print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
     print()
 
+    counter_evals_best = COUNTER_EVALS
     best_individual = indi
     best_individual_eval = evaluation_indi
+    list_best_individual_eval = [best_individual_eval]
 
     # Bucle (converge en un número de ciclos)
     success_in_generation = []
-    for i in range(500):
+    for i in range(50):
         print("Generación ", i)
 
-        indi = mutation(indi, evaluation_indi, success_in_generation)
+        indi, eval = mutation(indi, evaluation_indi, success_in_generation)
 
-        evaluation_indi = evaluateIndividual(indi)
+        evaluation_indi = eval
 
 
         if best_individual_eval > evaluation_indi:
             best_individual = indi
             best_individual_eval = evaluation_indi
 
-            print("Evaluación nuevo mejor individuo: ", best_individual_eval)
+            counter_evals_best = COUNTER_EVALS
+
             print("Codificación nuevo mejor individuo: ", best_individual)
+            print("Evaluación nuevo mejor individuo: ", best_individual_eval)
             print("Número de evaluaciones: ", COUNTER_EVALS)
 
         list_best_individual_eval.append(evaluation_indi)
 
-
+    if best_individual_eval < best_of_all[1]:
+        best_of_all = [best_individual, best_individual_eval, counter_evals_best]
     list_best_individual_eval_exp.append(list_best_individual_eval)
     print()
 
-print("Media de evaluaciones de los mejores individuos: ", sum(list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
+
+
+print("Codificación mejor individuo: ", best_of_all[0])
+print("Evaluación nuevo mejor individuo: ", best_of_all[1])
+print("Número de evaluaciones: ", best_of_all[2])
+print("Media de evaluaciones de los mejores individuos: ", sum(list_b[-1] for list_b in list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
 
 plt.plot(list_best_individual_eval_exp[0], label='Ex. 1º vez')
 plt.plot(list_best_individual_eval_exp[1], label='Ex. 2º vez')

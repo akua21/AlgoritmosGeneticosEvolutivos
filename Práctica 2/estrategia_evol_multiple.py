@@ -184,9 +184,12 @@ def newPopulation(population, children, replace="insertion"):
 
 # BUCLE para realizar varias veces el EXPERIMENTO-------------------------------
 list_best_individual_eval_exp = []
+
+best_of_all = [0, math.inf, 0]
+
 for num in range(NUM_TIMES_EXPERIMENT):
     print("EXP ", num, "-------------------------")
-    list_best_individual_eval = []
+    COUNTER_EVALS = 0
 
     popu = initPopulation(SIZE_POPULATION, NUM_MOTORS)
     print("POBLACIÓN INICIAL: ", popu)
@@ -200,11 +203,14 @@ for num in range(NUM_TIMES_EXPERIMENT):
     print("POBLACIÓN ORDENADA: ", popu)
     print()
 
+    counter_evals_best = COUNTER_EVALS
     best_individual = popu[0]
+    list_best_individual_eval = [best_individual[2]]
 
     # Bucle (converge en un número de ciclos)
-    for i in range(500):
+    for i in range(5):
         print("Generación ", i)
+        print("aaaaaaaaaa ", COUNTER_EVALS)
 
         children = generateChildren(popu, NUM_CHILDS)
 
@@ -213,16 +219,24 @@ for num in range(NUM_TIMES_EXPERIMENT):
         if best_individual[2] > popu[0][2]:
             best_individual = popu[0]
 
+            counter_evals_best = COUNTER_EVALS
+            print("kkkkkkkkkkkkk ", counter_evals_best)
             print("Evaluación nuevo mejor individuo: ", best_individual[2])
             print("Codificación nuevo mejor individuo: ", best_individual[0])
             print("Número de evaluaciones: ", COUNTER_EVALS)
 
         list_best_individual_eval.append(popu[0][2])
 
+    if best_individual[2] < best_of_all[1]:
+        print("OOOOOOOOOOOOOOOOOOOOOOOO ", counter_evals_best, best_of_all[1], best_individual[2])
+        best_of_all = [best_individual[0], best_individual[2], counter_evals_best]
     list_best_individual_eval_exp.append(list_best_individual_eval)
     print()
 
-print("Media de evaluaciones de los mejores individuos: ", sum(list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
+print("Codificación mejor individuo: ", best_of_all[0])
+print("Evaluación nuevo mejor individuo: ", best_of_all[1])
+print("Número de evaluaciones: ", best_of_all[2])
+print("Media de evaluaciones de los mejores individuos: ", sum(min(list_b) for list_b in list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
 
 plt.plot(list_best_individual_eval_exp[0], label='Ex. 1º vez')
 plt.plot(list_best_individual_eval_exp[1], label='Ex. 2º vez')
