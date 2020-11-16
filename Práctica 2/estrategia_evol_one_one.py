@@ -16,8 +16,10 @@ WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
 NUM_MOTORS = 4
-
 S = 10
+
+COUNTER_EVALS = 0
+NUM_TIMES_EXPERIMENT = 5
 
 # Funciones
 
@@ -47,6 +49,8 @@ def initIndividual(num_motors):
 
 # Evaluar individuo
 def evaluateIndividual(individual):
+    global COUNTER_EVALS
+    COUNTER_EVALS += 1
     evaluation = getRequest(individual[0])
     return evaluation
 
@@ -112,22 +116,56 @@ def mutation_variances(individual, success_in_generation):
 
 # EJECUCIÓN---------------------------------------------------------------------
 
-indi = initIndividual(NUM_MOTORS)
-print("INDIVIDUO: ", indi)
-print()
+# BUCLE para realizar varias veces el EXPERIMENTO-------------------------------
+list_best_individual_eval_exp = []
+for num in range(NUM_TIMES_EXPERIMENT):
+    print("EXP ", num, "-------------------------")
+    list_best_individual_eval = []
 
-evaluation_indi = evaluateIndividual(indi)
-print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
-print()
-
-# Bucle (converge en un número de ciclos)
-success_in_generation = []
-for i in range(500):
-    print("Generación ", i)
+    indi = initIndividual(NUM_MOTORS)
+    print("INDIVIDUO: ", indi)
+    print()
 
     evaluation_indi = evaluateIndividual(indi)
+    print("EVALUACIÓN INDIVIDUO: ", evaluation_indi)
+    print()
 
-    indi = mutation(indi, evaluation_indi, success_in_generation)
+    best_individual = indi
+    best_individual_eval = evaluation_indi
 
-print("EVALUACIÓN FINAL: ", evaluation_indi)
-print("CODIFICACIÓN FINAL: ", indi[0])
+    # Bucle (converge en un número de ciclos)
+    success_in_generation = []
+    for i in range(500):
+        print("Generación ", i)
+
+        indi = mutation(indi, evaluation_indi, success_in_generation)
+
+        evaluation_indi = evaluateIndividual(indi)
+
+
+        if best_individual_eval > evaluation_indi:
+            best_individual = indi
+            best_individual_eval = evaluation_indi
+
+            print("Evaluación nuevo mejor individuo: ", best_individual_eval)
+            print("Codificación nuevo mejor individuo: ", best_individual)
+            print("Número de evaluaciones: ", COUNTER_EVALS)
+
+        list_best_individual_eval.append(evaluation_indi)
+
+
+    list_best_individual_eval_exp.append(list_best_individual_eval)
+    print()
+
+print("Media de evaluaciones de los mejores individuos: ", sum(list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
+
+plt.plot(list_best_individual_eval_exp[0], label='Ex. 1º vez')
+plt.plot(list_best_individual_eval_exp[1], label='Ex. 2º vez')
+plt.plot(list_best_individual_eval_exp[2], label='Ex. 3º vez')
+plt.plot(list_best_individual_eval_exp[3], label='Ex. 4º vez')
+plt.plot(list_best_individual_eval_exp[4], label='Ex. 5º vez')
+
+plt.xlabel('Generaciones')
+plt.ylabel('Valor de fitness')
+plt.legend()
+plt.show()

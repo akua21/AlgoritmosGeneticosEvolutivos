@@ -23,6 +23,9 @@ S = 10
 TAU = 1/math.sqrt(2 * math.sqrt(NUM_MOTORS))
 TAU_0 = 1/math.sqrt(2 * NUM_MOTORS)
 
+COUNTER_EVALS = 0
+NUM_TIMES_EXPERIMENT = 5
+
 # Funciones
 
 # Petición al servidor
@@ -53,7 +56,9 @@ def initPopulation(size_population, num_motors):
 
 # Evaluar población
 def evaluatePopulation(population):
+    global COUNTER_EVALS
     for individual in population:
+        COUNTER_EVALS += 1
         individual[2] = getRequest(individual[0])
 
 # Ordenar población por menor evaluación(fitness)
@@ -177,30 +182,55 @@ def newPopulation(population, children, replace="insertion"):
 
 # EJECUCIÓN---------------------------------------------------------------------
 
-popu = initPopulation(SIZE_POPULATION, NUM_MOTORS)
-print("POBLACIÓN INICIAL: ", popu)
-print()
+# BUCLE para realizar varias veces el EXPERIMENTO-------------------------------
+list_best_individual_eval_exp = []
+for num in range(NUM_TIMES_EXPERIMENT):
+    print("EXP ", num, "-------------------------")
+    list_best_individual_eval = []
 
-evaluatePopulation(popu)
-print("POBLACIÓN EVALUADA: ", popu)
-print()
+    popu = initPopulation(SIZE_POPULATION, NUM_MOTORS)
+    print("POBLACIÓN INICIAL: ", popu)
+    print()
 
-sortPopulation(popu)
-print("POBLACIÓN ORDENADA: ", popu)
-print()
+    evaluatePopulation(popu)
+    print("POBLACIÓN EVALUADA: ", popu)
+    print()
 
-best_individual = popu[0]
+    sortPopulation(popu)
+    print("POBLACIÓN ORDENADA: ", popu)
+    print()
 
-# Bucle (converge en un número de ciclos)
-for i in range(500):
-    print("Generación ", i)
+    best_individual = popu[0]
 
-    children = generateChildren(popu, NUM_CHILDS)
+    # Bucle (converge en un número de ciclos)
+    for i in range(500):
+        print("Generación ", i)
 
-    popu = newPopulation(popu, children)
+        children = generateChildren(popu, NUM_CHILDS)
 
-    if best_individual[2] > popu[0][2]:
-        best_individual = popu[0]
+        popu = newPopulation(popu, children)
 
-        print("Evaluación nuevo mejor individuo: ", best_individual[2])
-        print("Codificación nuevo mejor individuo: ", best_individual[0])
+        if best_individual[2] > popu[0][2]:
+            best_individual = popu[0]
+
+            print("Evaluación nuevo mejor individuo: ", best_individual[2])
+            print("Codificación nuevo mejor individuo: ", best_individual[0])
+            print("Número de evaluaciones: ", COUNTER_EVALS)
+
+        list_best_individual_eval.append(popu[0][2])
+
+    list_best_individual_eval_exp.append(list_best_individual_eval)
+    print()
+
+print("Media de evaluaciones de los mejores individuos: ", sum(list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
+
+plt.plot(list_best_individual_eval_exp[0], label='Ex. 1º vez')
+plt.plot(list_best_individual_eval_exp[1], label='Ex. 2º vez')
+plt.plot(list_best_individual_eval_exp[2], label='Ex. 3º vez')
+plt.plot(list_best_individual_eval_exp[3], label='Ex. 4º vez')
+plt.plot(list_best_individual_eval_exp[4], label='Ex. 5º vez')
+
+plt.xlabel('Generaciones')
+plt.ylabel('Valor de fitness')
+plt.legend()
+plt.show()
