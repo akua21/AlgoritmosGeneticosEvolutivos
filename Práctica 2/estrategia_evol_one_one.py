@@ -170,8 +170,8 @@ for num in range(NUM_TIMES_EXPERIMENT):
 
 
 print("Codificación mejor individuo: ", best_of_all[0])
-print("Evaluación nuevo mejor individuo: ", best_of_all[1])
-print("Número de evaluaciones: ", best_of_all[2])
+print("Evaluación mejor individuo: ", best_of_all[1])
+print("Número de evaluaciones mejor individuo: ", best_of_all[2])
 print("Media de evaluaciones de los mejores individuos: ", sum(list_b[-1] for list_b in list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
 
 plt.plot(list_best_individual_eval_exp[0], label='Ex. 1º vez')

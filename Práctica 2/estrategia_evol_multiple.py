@@ -16,8 +16,8 @@ WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
 NUM_MOTORS = 4
-SIZE_POPULATION = 4
-NUM_CHILDS = 6
+SIZE_POPULATION = 100
+NUM_CHILDS = 100
 
 S = 10
 TAU = 1/math.sqrt(2 * math.sqrt(NUM_MOTORS))
@@ -210,17 +210,16 @@ for num in range(NUM_TIMES_EXPERIMENT):
     # Bucle (converge en un número de ciclos)
     for i in range(5):
         print("Generación ", i)
-        print("aaaaaaaaaa ", COUNTER_EVALS)
 
         children = generateChildren(popu, NUM_CHILDS)
 
-        popu = newPopulation(popu, children)
+        popu = newPopulation(popu, children, replace="inclusion")
 
         if best_individual[2] > popu[0][2]:
             best_individual = popu[0]
 
             counter_evals_best = COUNTER_EVALS
-            print("kkkkkkkkkkkkk ", counter_evals_best)
+
             print("Evaluación nuevo mejor individuo: ", best_individual[2])
             print("Codificación nuevo mejor individuo: ", best_individual[0])
             print("Número de evaluaciones: ", COUNTER_EVALS)
@@ -228,14 +227,13 @@ for num in range(NUM_TIMES_EXPERIMENT):
         list_best_individual_eval.append(popu[0][2])
 
     if best_individual[2] < best_of_all[1]:
-        print("OOOOOOOOOOOOOOOOOOOOOOOO ", counter_evals_best, best_of_all[1], best_individual[2])
         best_of_all = [best_individual[0], best_individual[2], counter_evals_best]
     list_best_individual_eval_exp.append(list_best_individual_eval)
     print()
 
 print("Codificación mejor individuo: ", best_of_all[0])
-print("Evaluación nuevo mejor individuo: ", best_of_all[1])
-print("Número de evaluaciones: ", best_of_all[2])
+print("Evaluación mejor individuo: ", best_of_all[1])
+print("Número de evaluaciones mejor individuo: ", best_of_all[2])
 print("Media de evaluaciones de los mejores individuos: ", sum(min(list_b) for list_b in list_best_individual_eval_exp) / NUM_TIMES_EXPERIMENT)
 
 plt.plot(list_best_individual_eval_exp[0], label='Ex. 1º vez')
