@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 
 # Website para los 10 rotores
-WEBSITE_10 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
+WEBSITE_10 = "http://163.117.164.219/age/robot10?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
-NUM_MOTORS = 4
+NUM_MOTORS = 10
 SIZE_POPULATION = 100
 NUM_CHILDS = 100
 
@@ -49,7 +49,7 @@ def initPopulation(size_population, num_motors):
         variances = []
         for i in range(num_motors):
             x.append(np.random.uniform(-180, 180))
-            variances.append(np.random.uniform(200, 400))
+            variances.append(np.random.uniform(0, 400))
 
         population.append([x, variances, None])
     return population
@@ -103,7 +103,7 @@ def crossing(parents):
     # Vector de varianzas
     variances_vector_child = []
     for i in range(len(parents[0][0])):
-        x_vector_child.append((sum(parent[0][i] for parent in parents))/len(parents[0][0]))
+        x_vector_child.append((sum(parent[0][i] for parent in parents))/len(parents))
         variances_vector_child.append(random.choice([parent[1][i] for parent in parents]))
 
     child = [x_vector_child, variances_vector_child, None]
@@ -208,12 +208,12 @@ for num in range(NUM_TIMES_EXPERIMENT):
     list_best_individual_eval = [best_individual[2]]
 
     # Bucle (converge en un número de ciclos)
-    for i in range(5):
+    for i in range(500):
         print("Generación ", i)
 
         children = generateChildren(popu, NUM_CHILDS)
 
-        popu = newPopulation(popu, children, replace="inclusion")
+        popu = newPopulation(popu, children)
 
         if best_individual[2] > popu[0][2]:
             best_individual = popu[0]
@@ -223,6 +223,8 @@ for num in range(NUM_TIMES_EXPERIMENT):
             print("Evaluación nuevo mejor individuo: ", best_individual[2])
             print("Codificación nuevo mejor individuo: ", best_individual[0])
             print("Número de evaluaciones: ", COUNTER_EVALS)
+            
+            print("VVVVVV ", best_individual[1])
 
         list_best_individual_eval.append(popu[0][2])
 
