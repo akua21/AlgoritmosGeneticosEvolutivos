@@ -17,7 +17,7 @@ WEBSITE_10 = "http://163.117.164.219/age/robot10?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c
 
 NUM_MOTORS = 10
 SIZE_POPULATION = 100
-NUM_CHILDS = 100
+NUM_CHILDS = 150
 
 S = 10
 TAU = 1/math.sqrt(2 * math.sqrt(NUM_MOTORS))
@@ -111,7 +111,7 @@ def crossing(parents):
 
 # Mutación
 def mutation(individual):
-    individual_mutated = [mutation_x(individual), mutation_variances(individual), None]
+    individual_mutated = [mutation_x(individual), mutation_variances(individual, scale=True), None]
     return individual_mutated
 
 # Mutación de la parte funcional
@@ -146,7 +146,7 @@ def mutation_variances(individual, scale=False):
 def generateChildren(population, num_childs):
     children = []
     for i in range(num_childs):
-        parents = tournamentSelection(population, sorted_population=True)
+        parents = tournamentSelection(population, sorted_population=True, num_parents=3)
 
         child = crossing(parents)
 
@@ -206,25 +206,29 @@ for num in range(NUM_TIMES_EXPERIMENT):
     counter_evals_best = COUNTER_EVALS
     best_individual = popu[0]
     list_best_individual_eval = [best_individual[2]]
-
+    
+    i = 0
+    best_eval = 1
     # Bucle (converge en un número de ciclos)
-    for i in range(500):
+    while i < 500 and best_eval != 0:
         print("Generación ", i)
+        i += 1
 
         children = generateChildren(popu, NUM_CHILDS)
 
-        popu = newPopulation(popu, children)
+        popu = newPopulation(popu, children, replace="inclusion")
 
         if best_individual[2] > popu[0][2]:
             best_individual = popu[0]
 
             counter_evals_best = COUNTER_EVALS
+            best_eval = best_individual[2]
 
             print("Evaluación nuevo mejor individuo: ", best_individual[2])
             print("Codificación nuevo mejor individuo: ", best_individual[0])
             print("Número de evaluaciones: ", COUNTER_EVALS)
             
-            print("VVVVVV ", best_individual[1])
+            #print("VVVVVV ", best_individual[1])
 
         list_best_individual_eval.append(popu[0][2])
 
@@ -232,6 +236,7 @@ for num in range(NUM_TIMES_EXPERIMENT):
         best_of_all = [best_individual[0], best_individual[2], counter_evals_best]
     list_best_individual_eval_exp.append(list_best_individual_eval)
     print()
+    
 
 print("Codificación mejor individuo: ", best_of_all[0])
 print("Evaluación mejor individuo: ", best_of_all[1])
