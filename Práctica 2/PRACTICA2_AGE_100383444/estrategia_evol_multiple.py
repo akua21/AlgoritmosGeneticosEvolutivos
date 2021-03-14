@@ -5,7 +5,6 @@ import requests
 import numpy as np
 import random
 import math
-import time
 import matplotlib.pyplot as plt
 
 # Constantes
@@ -15,9 +14,9 @@ WEBSITE_4 = "http://163.117.164.219/age/robot4?c1=%s&c2=%s&c3=%s&c4=%s"
 # Website para los 10 rotores
 WEBSITE_10 = "http://163.117.164.219/age/robot10?c1=%s&c2=%s&c3=%s&c4=%s&c5=%s&c6=%s&c7=%s&c8=%s&c9=%s&c10=%s"
 
-NUM_MOTORS = 10
+NUM_MOTORS = 4
 SIZE_POPULATION = 100
-NUM_CHILDS = 150
+NUM_CHILDS = 100
 
 S = 10
 TAU = 1/math.sqrt(2 * math.sqrt(NUM_MOTORS))
@@ -49,7 +48,7 @@ def initPopulation(size_population, num_motors):
         variances = []
         for i in range(num_motors):
             x.append(np.random.uniform(-180, 180))
-            variances.append(np.random.uniform(0, 400))
+            variances.append(np.random.uniform(100, 400))
 
         population.append([x, variances, None])
     return population
@@ -111,7 +110,7 @@ def crossing(parents):
 
 # Mutación
 def mutation(individual):
-    individual_mutated = [mutation_x(individual), mutation_variances(individual, scale=True), None]
+    individual_mutated = [mutation_x(individual), mutation_variances(individual), None]
     return individual_mutated
 
 # Mutación de la parte funcional
@@ -146,7 +145,7 @@ def mutation_variances(individual, scale=False):
 def generateChildren(population, num_childs):
     children = []
     for i in range(num_childs):
-        parents = tournamentSelection(population, sorted_population=True, num_parents=3)
+        parents = tournamentSelection(population, sorted_population=True)
 
         child = crossing(parents)
 

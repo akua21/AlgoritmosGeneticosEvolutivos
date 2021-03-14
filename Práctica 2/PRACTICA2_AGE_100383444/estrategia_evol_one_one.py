@@ -5,7 +5,6 @@ import requests
 import numpy as np
 import random
 import math
-import time
 import matplotlib.pyplot as plt
 
 # Constantes
